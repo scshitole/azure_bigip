@@ -3,65 +3,75 @@
 
 
 # Create Backend VMSS for App
-  resource "azurerm_virtual_machine_scale_set" "backendvmss" {
- name                = "backendvmscaleset"
- location            = var.location
- resource_group_name = azurerm_resource_group.main.name
- upgrade_policy_mode = "Manual"
+resource "azurerm_linux_virtual_machine_scale_set" "backendvmss" {
+  name                            = "${var.prefix}-backendvmss"
+  location                        = azurerm_resource_group.main.location
+  resource_group_name             = azurerm_resource_group.main.name
+  sku                             = var.instance_type
+  instances                       = 2
+  admin_username                  = var.uname
+  admin_password                  = var.upassword
+  disable_password_authentication = false
+  computer_name_prefix            = "${var.prefix}backendvm"
+  custom_data                     = base64encode(file("backend.sh"))
 
- sku {
-   name     = "Standard_DS1_v2"
-   tier     = "Standard"
-   capacity = 2
- }
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
 
- storage_profile_image_reference {
-   publisher = "Canonical"
-   offer     = "UbuntuServer"
-   sku       = "16.04-LTS"
-   version   = "latest"
- }
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "UbuntuServer"
+    sku       = "16.04-LTS"
+    version   = "latest"
+  }
 
- storage_profile_os_disk {
-   name              = ""
-   caching           = "ReadWrite"
-   create_option     = "FromImage"
-   managed_disk_type = "Standard_LRS"
- }
 
- storage_profile_data_disk {
-   lun          = 0
-   caching        = "ReadWrite"
-   create_option  = "Empty"
-   disk_size_gb   = 10
- }
+  network_interface {
+    name                      = "bmgmt"
+    primary                   = true
+    network_security_group_id = azurerm_network_security_group.main.id
 
- os_profile {
-   computer_name_prefix = "vmlab"
-   admin_username       = var.uname
-   admin_password       = var.upassword
-   custom_data          = file("backend.sh")
- }
+    ip_configuration {
+      name      = "mgmt"
+      primary   = true
+      subnet_id = azurerm_subnet.Mgmt.id
 
- os_profile_linux_config {
-   disable_password_authentication = false
- }
-network_profile {
-   name    = "terraformnetworkprofile"
-   primary = true
-      
-   ip_configuration {
-     name                                   = "IPConfiguration"
-     subnet_id                              = azurerm_subnet.External.id
-     primary = true
-   }
- }
+      public_ip_address {
+        name = "mgmt-pip"
+      }
+    }
+  }
 
- tags = {
-    Name        = "${var.environment}-backend01"
+  network_interface {
+    name                      = "bexternal"
+    primary                   = false
+    network_security_group_id = azurerm_network_security_group.main.id
+
+    ip_configuration {
+      name      = "primary"
+      primary   = true
+      subnet_id = azurerm_subnet.External.id
+
+      public_ip_address {
+        name = "backpip"
+      }
+    }
+
+    ip_configuration {
+      name      = "secondary"
+      primary   = false
+      subnet_id = azurerm_subnet.External.id
+      //load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.backend_pool.id]
+    }
+  }
+  tags = {
+    Name        = "${var.environment}-f5vmss"
     environment = var.environment
     owner       = var.owner
     group       = var.group
     costcenter  = var.costcenter
+    application = var.application
   }
 }

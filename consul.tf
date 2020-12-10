@@ -14,9 +14,9 @@ resource "azurerm_public_ip" "consulvmip" {
   }
 }
 resource "azurerm_network_interface" "consulvm-ext-nic" {
-  name                      = "${var.prefix}-consulvm-ext-nic"
-  location                  = azurerm_resource_group.main.location
-  resource_group_name       = azurerm_resource_group.main.name
+  name                = "${var.prefix}-consulvm-ext-nic"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
 
   ip_configuration {
     name                          = "primary"
@@ -64,7 +64,7 @@ resource "azurerm_virtual_machine" "consulvm" {
     computer_name  = "consulvm"
     admin_username = "azureuser"
     admin_password = var.upassword
-    custom_data = file("consul.sh")
+    custom_data    = file("consul.sh")
 
   }
 
