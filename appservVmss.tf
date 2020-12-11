@@ -1,7 +1,5 @@
 
 
-
-
 # Create Backend VMSS for App
 resource "azurerm_linux_virtual_machine_scale_set" "backendvmss" {
   name                            = "${var.prefix}-backendvmss"
@@ -13,8 +11,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "backendvmss" {
   admin_password                  = var.upassword
   disable_password_authentication = false
   computer_name_prefix            = "${var.prefix}backendvm"
-  custom_data                     = base64encode(file("backend.sh"))
-
+  custom_data                     = filebase64("${path.module}/backend.sh")
+  
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
@@ -27,26 +25,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "backendvmss" {
     version   = "latest"
   }
 
-
-  network_interface {
-    name                      = "bmgmt"
-    primary                   = true
-    network_security_group_id = azurerm_network_security_group.main.id
-
-    ip_configuration {
-      name      = "mgmt"
-      primary   = true
-      subnet_id = azurerm_subnet.Mgmt.id
-
-      public_ip_address {
-        name = "mgmt-pip"
-      }
-    }
-  }
-
   network_interface {
     name                      = "bexternal"
-    primary                   = false
+    primary                   = true
     network_security_group_id = azurerm_network_security_group.main.id
 
     ip_configuration {

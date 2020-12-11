@@ -59,4 +59,4 @@ variable "costcenter" { default = "f5costcenter" }
 variable "application" { default = "f5app" }
 
 # CONSUL Setup
-variable "consulvmext" { default = "10.90.1.100" }
+variable "consulvmext" { default = "10.90.2.100" }

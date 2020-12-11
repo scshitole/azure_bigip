@@ -20,7 +20,7 @@ resource "azurerm_network_interface" "consulvm-ext-nic" {
 
   ip_configuration {
     name                          = "primary"
-    subnet_id                     = azurerm_subnet.Mgmt.id
+    subnet_id                     = azurerm_subnet.External.id
     private_ip_address_allocation = "Static"
     private_ip_address            = var.consulvmext
     primary                       = true
